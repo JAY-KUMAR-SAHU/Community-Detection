@@ -1,0 +1,74 @@
+import networkx as nx
+import numpy as np
+
+def node_importance(G, alpha):
+
+    # Compute the eigenvector centrality for the graph
+    ec = nx.eigenvector_centrality(G)
+
+    # Compute the local and global properties for each node
+    degrees = dict(G.degree())
+    clustering = nx.clustering(G)
+
+    # Compute the node importance using the given formula
+    node_imp = {}
+    for node in G.nodes():
+        node_imp[node] = alpha * ec[node] + (1 - alpha) * (degrees[node] + clustering[node])
+
+    return node_imp
+
+def label_propagation(G, node_imp):
+
+    # Initialize each node with a unique label
+    labels = {node: i for i, node in enumerate(G.nodes())}
+
+    while True:
+        # Shuffle the nodes in a random order
+        nodes = list(G.nodes())
+        np.random.shuffle(nodes)
+
+        # Track whether any label has changed during this iteration
+        changed = False
+
+        # Propagate the labels to the neighbors of each node
+        for node in nodes:
+            # Compute the frequencies of the labels among the neighbors
+            freq = {}
+            for neighbor in G.neighbors(node):
+                if labels[neighbor] not in freq:
+                    freq[labels[neighbor]] = 0
+                freq[labels[neighbor]] += node_imp[neighbor]
+
+            # Assign the label with the highest frequency to the node
+            max_label = labels[node]
+            max_freq = freq.get(max_label, 0)
+            for label, frequency in freq.items():
+                if frequency > max_freq:
+                    max_label = label
+                    max_freq = frequency
+
+            # Update the label of the node if it has changed
+            if labels[node] != max_label:
+                labels[node] = max_label
+                changed = True
+
+        # Exit the loop if no label has changed during this iteration
+        if not changed:
+            break
+
+    # Convert the labels into sets of nodes for each community
+    communities = []
+    for label in set(labels.values()):
+        community = {node for node in G.nodes() if labels[node] == label}
+        communities.append(community)
+    
+    
+
+    return communities
+
+# Example usage on the karate network
+G = nx.karate_club_graph()
+node_imp = node_importance(G, alpha=0.5)
+communities = label_propagation(G, node_imp)
+for i, community in enumerate(communities):
+    print(f"Community {i+1}: {community}")
