@@ -47,14 +47,6 @@ def AVI (G, cluster):
         sum += isolability (G, cluster[i])
     return sum / len (cluster)
 
-
-# AVERAGE UNIFIABILITY OF GRAPH
-AVU_G = AVU (G, communities)
-print ("UNIFIABILITY = ", AVU_G)
-# AVERAGE ISOLABILITY
-AVI_G = AVI (G, communities)
-print("ISOBILITY", AVI_G)
-
 def node_importance(G, alpha):
 
     # Compute the eigenvector centrality for the graph
